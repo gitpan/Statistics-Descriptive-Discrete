@@ -8,8 +8,8 @@ use Carp;
 use AutoLoader;
 use vars qw($VERSION $REVISION $AUTOLOAD $DEBUG %autosubs);
 
-$VERSION = '0.02';
-$REVISION = '$Revision: 1.6 $';
+$VERSION = '0.03';
+$REVISION = '$Revision: 1.8 $';
 $DEBUG = 0;
 
 #what subs can be autoloaded?
@@ -111,12 +111,14 @@ sub _all_stats
 
 	if ($count > 1)
 	{
+		# Thanks to Peter Dienes for finding and fixing a round-off error
+		# in the following variance calculation
+
 		foreach my $val (keys %{$self->{data}})
 		{
-			#how many times the square of the value
-			$stddev += $self->{data}{$val} * $val * $val;
+			$stddev += $self->{data}{$val} * (($val - $mean) ** 2);
 		}
-		$variance = ($stddev - $count*$mean*$mean)/($count - 1);
+		$variance = $stddev / ($count - 1);
 		$stddev = sqrt($variance);
 	}
 	else {$stddev = undef}

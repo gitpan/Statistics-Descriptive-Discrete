@@ -6,7 +6,7 @@
 # change 'tests => 1' to 'tests => last_test_to_print';
 
 use Test;
-BEGIN { plan tests => 12 };
+BEGIN { plan tests => 13 };
 use Statistics::Descriptive::Discrete;
 
 #1: did the module import ok?
@@ -49,6 +49,16 @@ ok(abs($stats->standard_deviation-1.33749350984926) < 0.00001);
 #12: variance
 ok(abs($stats->variance-1.78888888888) < 0.00001);
 
+#13: variance for small values
+$stats = Statistics::Descriptive::Discrete->new;
+my @data;
+for ($i=0;$i<45;$i++)
+{
+	push @data,0.01113;
+}
+$stats->add_data(@data);
+ok($stats->variance > 0);
+
 #TODO:
-#13: frequency_distribution
+#14: frequency_distribution
 #even/odd data sets for median

@@ -1,5 +1,9 @@
 Revision history for Perl extension Statistics::Descriptive::Discrete.
 
+0.03  Mon Mar 18 13:46:23 2002
+	- Fixed a bug in the calculation of variance caused by round-off error.
+	  Thanks to Peter Dienes for finding and fixing this bug!
+
 0.02  Wed Mar  6 13:00:25 2002
 	- first release to CPAN
 
