@@ -8,8 +8,8 @@ use Carp;
 use AutoLoader;
 use vars qw($VERSION $REVISION $AUTOLOAD $DEBUG %autosubs);
 
-$VERSION = '0.03';
-$REVISION = '$Revision: 1.8 $';
+$VERSION = '0.07';
+$REVISION = '$Revision: 1.14 $';
 $DEBUG = 0;
 
 #what subs can be autoloaded?
@@ -25,6 +25,7 @@ $DEBUG = 0;
   standard_deviation	=> undef,
   sample_range			=> undef,
   variance				=> undef,
+  text					=> undef,
 );
 
 	
@@ -58,6 +59,36 @@ sub add_data
 		#set dirty flag so we know cached stats are invalid
 		$self->{dirty}++;
 		$val = shift; #get next element
+	}
+}
+
+sub add_data_tuple
+{
+	#add data but don't compute ANY statistics yet
+	#the data are pairs of values and occurrences
+	#e.g. 4,2 means 2 occurrences of the value 4
+	#thanks to Bill Dueber for suggesting this
+
+	my $self = shift;
+	print __PACKAGE__,"->add_data_tuple(",join(',',@_),")\n" if $DEBUG;
+
+	#we want an even number of arguments (tuples in the form (value, count))
+	carp "argument list must have even number of elements" if @_ % 2;
+
+	#get each element and add 0 to force it be a number
+	#that way, 0.000 and 0 are treated the same
+	#if $count is 0, then this will set the dirty flag but have no effect on
+	#the statistics
+	my $val = shift;
+	my $count = shift;
+	while (defined $count)
+	{
+		$val += 0; 
+		$self->{data}{$val} += $count;
+		#set dirty flag so we know cached stats are invalid
+		$self->{dirty}++;
+		$val = shift; #get next element
+		$count = shift; 
 	}
 }
 
@@ -163,6 +194,12 @@ sub _all_stats
 
 	#clear dirty flag so we don't needlessly recompute the statistics 
 	$self->{dirty} = 0;  
+}
+
+sub set_text
+{
+	my $self = shift;
+	$self->{text} = shift;
 }
 
 sub get_data
@@ -320,13 +357,86 @@ to calculate a set of statistics instead of the 561 seconds required by
 Statistics::Descriptive::Full.  It also required only 4MB of RAM instead of 
 the 400MB used by Statistics::Descriptive::Full for the same data set.
 
+=head1 METHODS
+
+=over
+
+=item $stat = Statistics::Descriptive::Discrete->new();
+
+Create a new statistics object.
+
+=item $stat->add_data(1,2,3,4,5);
+
+Adds data to the statistics object.  Sets a flag so that
+the statistics will be recomputed the next time they're
+needed.
+
+=item $stat->add_data_tuple(1,2,42,3);
+
+Adds data to the statistics object where every two elements
+are a value and a count (how many times did the value occur?)
+The above is equivalent to $stat->add_data(1,1,42,42,42);
+Use this when your data is in a form isomorphic to 
+($value, $occurrence).
+
+=item $stat->max();
+
+Returns the maximum value of the data set.
+
+=item $stat->min();
+
+Returns the minimum value of the data set.
+
+=item $stat->count();
+
+Returns the total number of elements in the data set.
+
+=item $stat->uniq();
+
+Returns the total number of unique elements in the data set.
+For example, if your data set is (1,2,2,3,3,3), uniq will 
+return 3.
+
+=item $stat->sum();
+
+Returns the sum of all the values in the data set.
+
+=item $stat->mean();
+
+Returns the mean of the data.
+
+=item $stat->median();
+
+Returns the median value of the data.
+
+=item $stat->mode();
+
+Returns the mode of the data.
+
+=item $stat->variance();
+
+Returns the variance of the data.
+
+=item $stat->standard_deviation();
+
+Returns the standard_deviation of the data.
+
+=item $stat->sample_range();
+
+Returns the sample range (max - min) of the data set.
+
+=item $stat->get_data();
+
+Returns a copy of the data array.  Note: This array could be
+very large and would thus defeat the purpose of using this
+module.  Make sure you really need it before using get_data().
+
+=back
+
 =head1 NOTE
 
-Until I get a chance to add documentation for the method calls, look at 
-the Statistics::Descriptive documentation.  The interface for this module is 
-almost identical to Statistics::Descriptive.  
-This module is incomplete and not fully tested.  It's currently only alpha 
-code so use at your own risk.
+The interface for this module is almost identical to Statistics::Descriptive.  
+This module is incomplete and not fully tested.  
 
 =head1 BUGS
 
@@ -348,10 +458,6 @@ Other bugs are lurking I'm sure.
 
 =item *
 
-Finish the documentation for each method
-
-=item *
-
 Make test suite more robust
 
 =item *
@@ -364,6 +470,25 @@ from Statistics::Descriptive
 =head1 AUTHOR
 
 Rhet Turnbull, RhetTbull on perlmonks.org, rhettbull at hotmail.com
+
+If you find this code useful, I would appreciate an email letting me know.
+
+=head1 CREDIT
+
+Thanks to the following individuals for finding bugs, providing feedback, 
+and submitting changes:
+
+=over
+
+=item *
+
+Peter Dienes for finding and fixing a bug in the variance calculation.
+
+=item *
+
+Bill Dueber for suggesting the add_data_tuple method.
+
+=back
 
 =head1 COPYRIGHT
 

@@ -6,7 +6,7 @@
 # change 'tests => 1' to 'tests => last_test_to_print';
 
 use Test;
-BEGIN { plan tests => 13 };
+BEGIN { plan tests => 16 };
 use Statistics::Descriptive::Discrete;
 
 #1: did the module import ok?
@@ -58,6 +58,19 @@ for ($i=0;$i<45;$i++)
 }
 $stats->add_data(@data);
 ok($stats->variance > 0);
+
+#14 add_data_tuple
+$stats = Statistics::Descriptive::Discrete->new;
+$stats->add_data_tuple(2,2);
+$stats->add_data_tuple(3,3,4,4);
+ok($stats->uniq,3);
+
+#15
+ok($stats->sum,29);
+
+#16 more add_data_tuple
+ok($stats->count,9);
+
 
 #TODO:
 #14: frequency_distribution
